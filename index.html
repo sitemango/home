@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Site Mango — a premium website design and development agency crafting digital experiences that move." />
+<title>SITE MANGO — Digital Design Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- SVG filters for the theme switch (sketchy displacement) -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <filter id="sketchy" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="turbulence" baseFrequency="0.035 0.042" numOctaves="4" result="noise" seed="42"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="4.5" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+    </filter>
+    <filter id="sketchy-sm" x="-18%" y="-18%" width="136%" height="136%">
+      <feTurbulence type="turbulence" baseFrequency="0.06" numOctaves="3" result="noise" seed="7"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+    </filter>
+  </defs>
+</svg>
+
+<!-- ============ CINEMATIC LOADER (5s luxury title sequence) ============ -->
+<div class="preloader" id="preloader" aria-hidden="true">
+  <div class="ld-scene">
+    <div class="ld-line"></div>
+    <div class="ld-build" id="ldBuild"></div>
+  </div>
+</div>
+
+<!-- ============ BACKGROUND LAYERS ============ -->
+<div class="bg" aria-hidden="true">
+  <div class="bg-grid"></div>
+  <div class="bg-light"></div>
+  <div class="bg-spotlight"></div>
+  <div class="bg-gridreveal"></div>
+  <div class="bg-vignette"></div>
+  <div class="bg-grain"></div>
+  <div class="bg-glow bg-glow--a"></div>
+  <div class="bg-glow bg-glow--b"></div>
+</div>
+
+<!-- ============ CUSTOM CURSOR ============ -->
+<div class="cursor" id="cursor" aria-hidden="true">
+  <span class="cursor-dot"></span>
+  <span class="cursor-trail"></span>
+  <span class="cursor-ring"></span>
+  <span class="cursor-label" id="cursorLabel">EXPLORE</span>
+</div>
+<!-- floating techy keyword chips near the cursor -->
+<div class="tech-keywords" id="techKeywords" aria-hidden="true"></div>
+
+<!-- ============ SCROLL VELOCITY / STATUS ============ -->
+<div class="status" id="status" aria-hidden="true">
+  <span class="status-label">VELOCITY</span>
+  <div class="status-track"><span id="statusFill"></span></div>
+  <span class="status-readout" id="statusReadout">00</span>
+</div>
+
+<!-- ============ PROGRESS ============ -->
+<div class="progress" id="progress" aria-hidden="true"><span></span></div>
+
+<!-- ============ SECTION MAP (scroll-spy dots) ============ -->
+<nav class="sitemap" id="sitemap" aria-label="Sections">
+  <a href="#top" data-sec="top" data-cursor="TOP" title="Top"><span></span><i>Top</i></a>
+  <a href="#work" data-sec="work" data-cursor="WORK" title="Work"><span></span><i>Work</i></a>
+  <a href="#process" data-sec="process" data-cursor="PROCESS" title="Process"><span></span><i>Process</i></a>
+  <a href="#services" data-sec="services" data-cursor="SERVICES" title="Services"><span></span><i>Services</i></a>
+  <a href="#about" data-sec="about" data-cursor="ABOUT" title="About"><span></span><i>About</i></a>
+  <a href="#contact" data-sec="contact" data-cursor="HELLO" title="Contact"><span></span><i>Contact</i></a>
+</nav>
+
+<!-- ============ COMMAND PALETTE ============ -->
+<div class="palette" id="palette" role="dialog" aria-hidden="true">
+  <div class="palette-box">
+    <div class="palette-input-wrap">
+      <span class="palette-glyph" aria-hidden="true">›</span>
+      <input class="palette-input" id="paletteInput" type="text" placeholder="Type a command or search…" autocomplete="off" spellcheck="false" />
+      <span class="palette-kbd">ESC</span>
+    </div>
+    <ul class="palette-list" id="paletteList"></ul>
+    <div class="palette-foot">↑↓ navigate · ↵ open · esc close</div>
+  </div>
+</div>
+
+<!-- ============ NAVIGATION ============ -->
+<header class="nav" id="nav">
+  <a class="nav-logo" href="#top" data-cursor="HOME">
+    <span>SITE</span><strong>MANGO</strong>
+  </a>
+  <nav class="nav-links" id="navLinks" aria-label="Primary">
+    <a href="#work" data-cursor="WORK">Work</a>
+    <a href="#process" data-cursor="PROCESS">Process</a>
+    <a href="#services" data-cursor="SERVICES">Services</a>
+    <a href="#about" data-cursor="ABOUT">About</a>
+    <a href="#contact" data-cursor="HELLO">Contact</a>
+  </nav>
+  <label class="theme-switch" title="Toggle light / dark" data-cursor="MODE" aria-label="Toggle light and dark theme">
+    <input class="theme-switch__checkbox" type="checkbox" checked />
+    <div class="theme-switch__container">
+      <div class="theme-switch__clouds"></div>
+      <div class="theme-switch__stars-container">
+        <svg fill="none" viewBox="0 0 144 55" xmlns="http://www.w3.org/2000/svg">
+          <path fill="currentColor" d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z" clip-rule="evenodd" fill-rule="evenodd"></path>
+        </svg>
+      </div>
+      <div class="theme-switch__circle-container">
+        <div class="theme-switch__sun-moon-container">
+          <div class="theme-switch__moon">
+            <div class="theme-switch__spot"></div>
+            <div class="theme-switch__spot"></div>
+            <div class="theme-switch__spot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="theme-switch__shooting-star"></div>
+      <div class="theme-switch__shooting-star-2"></div>
+      <div class="theme-switch__meteor"></div>
+      <div class="theme-switch__stars-cluster">
+        <div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div>
+      </div>
+      <div class="theme-switch__aurora"></div>
+      <div class="theme-switch__comets">
+        <div class="comet"></div><div class="comet"></div>
+      </div>
+    </div>
+  </label>
+  <button class="nav-burger" id="navBurger" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span>
+  </button>
+</header>
+
+<!-- ============ MOBILE MENU ============ -->
+<div class="menu" id="menu" aria-hidden="true">
+  <a href="#work" data-cursor="WORK">Work</a>
+  <a href="#process" data-cursor="PROCESS">Process</a>
+  <a href="#services" data-cursor="SERVICES">Services</a>
+  <a href="#about" data-cursor="ABOUT">About</a>
+  <a href="#contact" data-cursor="HELLO">Contact</a>
+  <span class="menu-tag">hello@sitemango.studio</span>
+</div>
+
+<!-- ============ SCROLL WRAPPER ============ -->
+<div class="scroll" id="scroll">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <p class="hero-kicker" data-reveal>Premium digital design &amp; development studio — est. 2019</p>
+
+      <h1 class="hero-title" aria-label="Design that moves">
+        <span class="line" data-reveal><em>DESIGN</em></span>
+        <span class="line" data-reveal><em>THAT</em></span>
+        <span class="line" data-reveal><em class="moves">MOVES.</em></span>
+      </h1>
+
+      <div class="hero-type" data-reveal>
+        <span class="hero-type-prefix">WE BUILD</span>
+        <span class="hero-type-word" id="typewriter" data-words='["EXPERIENCES","BRANDS","STORIES","WEBSITES","INTERFACES","MOMENTS"]'>&nbsp;</span>
+        <span class="hero-type-caret" aria-hidden="true"></span>
+      </div>
+
+      <div class="hero-bottom" data-reveal>
+        <p class="hero-text">We build quiet, precise digital experiences for brands that refuse to be ignored. Less decoration. More intent.</p>
+        <a class="hero-cta btn" href="#work" data-cursor="VIEW">
+          <span class="btn-text">Explore the work</span>
+          <span class="btn-icon">↓</span>
+        </a>
+      </div>
+
+      <div class="hero-coords" aria-hidden="true">
+        <span>51.5072° N / 0.1276° W</span>
+        <span>SCROLL TO MOVE</span>
+        <span id="heroClock">--:--:--</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EDITORIAL MARQUEE ============ -->
+  <div class="marquee marquee--dark" aria-hidden="true">
+    <div class="marquee-track">
+      <span>DESIGN THAT MOVES</span><span class="marquee-star">✦</span>
+      <span>SITE MANGO</span><span class="marquee-star">✦</span>
+      <span>PREMIUM DIGITAL</span><span class="marquee-star">✦</span>
+      <span>EST. 2019</span><span class="marquee-star">✦</span>
+      <span>DESIGN THAT MOVES</span><span class="marquee-star">✦</span>
+      <span>SITE MANGO</span><span class="marquee-star">✦</span>
+      <span>PREMIUM DIGITAL</span><span class="marquee-star">✦</span>
+      <span>EST. 2019</span><span class="marquee-star">✦</span>
+    </div>
+  </div>
+
+  <!-- ============ PORTFOLIO / ORBITAL GALLERY ============ -->
+  <section class="work notch" id="work">
+    <header class="section-head" data-reveal>
+      <p class="section-index">01 / WORK</p>
+      <h2 class="section-title">Selected <em>Projects</em></h2>
+      <div class="section-head-row">
+        <p class="section-note">An open orbit of recent builds. Drag to steer, scroll to speed, click to focus.</p>
+        <button class="random-btn btn" id="randomWork" data-cursor="SHUFFLE" type="button">
+          <span class="btn-text">Random work</span>
+          <span class="btn-icon random-icon">↻</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="orbit" id="orbit">
+      <div class="orbit-guidelines" aria-hidden="true">
+        <svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid meet">
+          <ellipse class="g-ring" cx="600" cy="350" rx="420" ry="200"></ellipse>
+          <ellipse class="g-ring g-ring--inner" cx="600" cy="350" rx="250" ry="120"></ellipse>
+          <line class="g-line" x1="180" y1="350" x2="1020" y2="350"></line>
+          <circle class="g-dot" cx="600" cy="350" r="3"></circle>
+        </svg>
+      </div>
+
+      <div class="orbit-stage">
+        <div class="orbit-tilt">
+          <div class="orbit-track" id="orbitTrack"></div>
+        </div>
+      </div>
+
+      <div class="orbit-labels" aria-hidden="true">
+        <span>CLIENT</span><span>LIVE</span><span>2026</span>
+        <span>CASE</span><span>VIEW</span><span>NEXT</span><span>CONNECTED</span>
+      </div>
+      <div class="orbit-hint" id="orbitHint">DRAG TO STEER · SCROLL TO SPEED</div>
+    </div>
+  </section>
+
+  <!-- ============ PROCESS ============ -->
+  <section class="process notch" id="process">
+    <header class="section-head" data-reveal>
+      <p class="section-index">02 / PROCESS</p>
+      <h2 class="section-title">How we <em>work</em></h2>
+      <p class="section-note">A deliberate path from first sketch to shipped experience.</p>
+    </header>
+
+    <div class="process-list">
+      <div class="process-item" data-reveal data-cursor="EXPAND">
+        <span class="process-num">01</span>
+        <div class="process-body">
+          <h3>Discover</h3>
+          <p>Listening before speaking. We map your audience, ambition and constraints into a clear creative direction.</p>
+          <span class="process-meta">RESEARCH · STRATEGY · AUDIT</span>
+        </div>
+        <span class="process-arrow">↗</span>
+      </div>
+      <div class="process-item" data-reveal data-cursor="EXPAND">
+        <span class="process-num">02</span>
+        <div class="process-body">
+          <h3>Design</h3>
+          <p>Editorial systems, motion language and interface — crafted at the intersection of clarity and craft.</p>
+          <span class="process-meta">IDENTITY · UI · MOTION</span>
+        </div>
+        <span class="process-arrow">↗</span>
+      </div>
+      <div class="process-item" data-reveal data-cursor="EXPAND">
+        <span class="process-num">03</span>
+        <div class="process-body">
+          <h3>Build</h3>
+          <p>Performance-first development. Every animation springs, every pixel lands, every kilobyte earns its place.</p>
+          <span class="process-meta">FRONTEND · CMS · LAUNCH</span>
+        </div>
+        <span class="process-arrow">↗</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERVICES ============ -->
+  <section class="services notch" id="services">
+    <header class="section-head" data-reveal>
+      <p class="section-index">03 / SERVICES</p>
+      <h2 class="section-title">What we <em>do</em></h2>
+    </header>
+
+    <div class="services-grid">
+      <div class="service" data-reveal data-cursor="OPEN">
+        <span class="service-glyph" aria-hidden="true">◇</span>
+        <span class="service-index">A</span>
+        <h3>Art Direction</h3>
+        <p>Visual identity and editorial direction that makes a brand unmistakable.</p>
+      </div>
+      <div class="service" data-reveal data-cursor="OPEN">
+        <span class="service-glyph" aria-hidden="true">◈</span>
+        <span class="service-index">B</span>
+        <h3>Web Design</h3>
+        <p>Interfaces and experiences designed with intent, not decoration.</p>
+      </div>
+      <div class="service" data-reveal data-cursor="OPEN">
+        <span class="service-glyph" aria-hidden="true">✦</span>
+        <span class="service-index">C</span>
+        <h3>Development</h3>
+        <p>Fast, accessible, scalable builds — engineered to feel effortless.</p>
+      </div>
+      <div class="service" data-reveal data-cursor="OPEN">
+        <span class="service-glyph" aria-hidden="true">❖</span>
+        <span class="service-index">D</span>
+        <h3>Motion</h3>
+        <p>Cinematic interaction and micro-animation that gives the work life.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EDITORIAL MARQUEE ============ -->
+  <div class="marquee marquee--light" aria-hidden="true">
+    <div class="marquee-track marquee-track--rev">
+      <span>WHAT WE DO</span><span class="marquee-star">✦</span>
+      <span>ART DIRECTION</span><span class="marquee-star">✦</span>
+      <span>WEB DESIGN</span><span class="marquee-star">✦</span>
+      <span>DEVELOPMENT</span><span class="marquee-star">✦</span>
+      <span>MOTION</span><span class="marquee-star">✦</span>
+      <span>WHAT WE DO</span><span class="marquee-star">✦</span>
+      <span>ART DIRECTION</span><span class="marquee-star">✦</span>
+      <span>WEB DESIGN</span><span class="marquee-star">✦</span>
+      <span>DEVELOPMENT</span><span class="marquee-star">✦</span>
+      <span>MOTION</span><span class="marquee-star">✦</span>
+    </div>
+  </div>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="about notch" id="about">
+    <header class="section-head" data-reveal>
+      <p class="section-index">04 / ABOUT</p>
+      <h2 class="section-title">A small studio, <em>obsessed</em></h2>
+    </header>
+
+    <div class="about-wrap">
+      <p class="about-para" data-reveal>We are a compact team of designers and engineers who believe a website should feel less like a page and more like a room you move through.</p>
+      <div class="about-stats">
+        <div class="stat" data-reveal><strong data-count="6" data-pad="2">0</strong><span>Years crafting</span></div>
+        <div class="stat" data-reveal><strong data-count="120">0</strong><span>Projects shipped</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section class="contact notch" id="contact">
+    <header class="section-head" data-reveal>
+      <p class="section-index">05 / CONTACT</p>
+      <h2 class="section-title">Let's make it <em>move</em></h2>
+      <p class="section-note">Tell us about your project. We reply within one working day.</p>
+    </header>
+
+    <form class="contact-form" id="contactForm" novalidate>
+      <div class="field" data-reveal>
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" placeholder="Your name" autocomplete="name" required />
+        <span class="field-err">Please enter your name</span>
+      </div>
+      <div class="field" data-reveal>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="you@studio.com" autocomplete="email" required />
+        <span class="field-err">Please enter a valid email</span>
+      </div>
+      <div class="field" data-reveal>
+        <label for="budget">Project budget (INR)</label>
+        <input type="number" id="budget" name="budget" placeholder="Add your budget" min="0" inputmode="numeric" autocomplete="off" required />
+        <span class="field-err">Please enter a numeric budget</span>
+      </div>
+      <div class="field" data-reveal>
+        <label for="message">About the project</label>
+        <textarea id="message" name="message" rows="4" placeholder="A few lines about what you're building…" required></textarea>
+        <span class="field-err">Tell us a little about it</span>
+      </div>
+
+      <div class="form-foot" data-reveal>
+        <p class="form-status" id="formStatus" role="status"></p>
+        <button class="btn btn--submit" type="submit" data-cursor="SEND">
+          <span class="btn-text">Send message</span>
+          <span class="btn-icon">→</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="footer-top">
+      <a class="nav-logo" href="#top" data-cursor="HOME"><span>SITE</span><strong>MANGO</strong></a>
+      <span class="footer-tag">Design that moves.</span>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <span class="footer-h">Studio</span>
+        <a href="mailto:hello@sitemango.studio">hello@sitemango.studio</a>
+        <a href="tel:+10000000000">+1 (000) 000-0000</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-h">Social</span>
+        <a href="#" data-cursor="OPEN">Instagram</a>
+        <a href="#" data-cursor="OPEN">Dribbble</a>
+        <a href="#" data-cursor="OPEN">LinkedIn</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-h">Index</span>
+        <a href="#work">Work</a>
+        <a href="#process">Process</a>
+        <a href="#about">About</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Site Mango Studio</span>
+      <span class="footer-coords" aria-hidden="true">51.5072°N · 0.1276°W</span>
+      <button class="to-top" id="toTop" data-cursor="TOP">Back to top ↑</button>
+    </div>
+  </footer>
+
+</div><!-- /scroll -->
+
+<script src="main.js"></script>
+</body>
+</html>
