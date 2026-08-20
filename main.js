@@ -36,61 +36,13 @@
   }, { passive: true });
 
   /* ============================================================
-     CINEMATIC LOADER — a 5s luxury title sequence.
-     The wordmark is CONSTRUCTED from geometric line fragments:
-       idle → a 1px line cuts the darkness → the line scatters into
-       blueprint fragments → fragments assemble into SITE MANGO →
-       fine-tuning (guides slide away) → camera passes through.
+     CINEMATIC LOADER — quiet, ~2s title moment.
+     Phases: idle → hairline draws in → wordmark resolves from a
+     soft blur and holds → everything dissolves together.
+     No scatter/zoom theatrics — restraint reads as premium.
      Runs once per session.
      ============================================================ */
   const preloader = $('#preloader');
-
-  /* geometric alphabet: each glyph = line segments [x1,y1,x2,y2] */
-  const GLYPH = {
-    S:[[6,26,42,26],[42,26,42,52],[42,52,6,52],[6,52,6,78],[6,78,42,78]],
-    I:[[8,20,36,20],[22,20,22,96],[8,96,36,96]],
-    T:[[6,22,46,22],[26,22,26,96]],
-    E:[[40,22,6,22],[6,22,6,96],[6,96,40,96],[6,58,32,58]],
-    M:[[6,20,6,96],[6,20,26,50],[26,50,46,96],[46,96,46,20]],
-    A:[[6,96,26,20],[26,20,46,96],[14,70,38,70]],
-    N:[[6,20,6,96],[6,20,46,96],[46,96,46,20]],
-    G:[[40,20,6,20],[6,20,6,96],[6,96,40,96],[40,96,40,58],[40,58,24,58]],
-    O:[[6,20,40,20],[40,20,40,96],[40,96,6,96],[6,96,6,20]]
-  };
-  const ADV = { S:50, I:48, T:56, E:50, M:54, A:54, N:54, G:54, O:48 };
-
-  function buildSegments() {
-    const build = $('#ldBuild');
-    if (!build) return [];
-    const segs = [];
-    let ox = 10;
-    'SITE'.split('').forEach((ch) => { segs.push(...GLYPH[ch].map((s) => ({ x1: s[0] + ox, y1: s[1], x2: s[2] + ox, y2: s[3] }))); ox += ADV[ch]; });
-    ox += 60; // inter-word gap
-    'MANGO'.split('').forEach((ch) => { segs.push(...GLYPH[ch].map((s) => ({ x1: s[0] + ox, y1: s[1], x2: s[2] + ox, y2: s[3] }))); ox += ADV[ch]; });
-    const W = build.clientWidth || 900;
-    const scale = (W * 0.94) / ox;
-    const oy = 100 - 58 * scale;
-    const cx0 = (W - ox * scale) / 2;
-    return segs.map((s, i) => {
-      const el = document.createElement('span');
-      el.className = 'ld-seg';
-      const len = Math.hypot((s.x2 - s.x1) * scale, (s.y2 - s.y1) * scale);
-      const ang = Math.atan2(s.y2 - s.y1, s.x2 - s.x1) * 180 / Math.PI;
-      const px = (s.x1 + s.x2) / 2 * scale + cx0;
-      const py = (s.y1 + s.y2) / 2 * scale + oy;
-      el.style.width = Math.max(len, 1) + 'px';
-      const fin = 'translate(' + (px - len / 2).toFixed(1) + 'px,' + py.toFixed(1) + 'px) rotate(' + ang.toFixed(2) + 'deg)';
-      // scattered blueprint position (structured, not random)
-      const col = (i % 9) - 4, row = Math.floor(i / 9) - 1;
-      const sx = px + col * 70 + (i % 3) * 12;
-      const sy = py + row * 60 + ((i * 7) % 5) * 8;
-      const sc = 'translate(' + (sx - len / 2).toFixed(1) + 'px,' + sy.toFixed(1) + 'px) rotate(' + (ang + (i % 2 ? -24 : 22)).toFixed(2) + 'deg)';
-      el._final = fin; el._scatter = sc;
-      el.style.transform = sc; el.style.opacity = '0.55';
-      build.appendChild(el);
-      return el;
-    });
-  }
 
   function runPreloader() {
     if (!preloader) return;
@@ -100,30 +52,25 @@
     if (el._plStarted) return;
     el._plStarted = true;
 
-    const segs = buildSegments();
-    const phases = ['ph-cut', 'ph-frag', 'ph-build', 'ph-fine', 'ph-pass'];
-    const T = { cut: 0.8, frag: 1.8, build: 2.8, fine: 3.8, pass: 4.8, end: 5.05 };
+    const phases = ['ph-cut', 'ph-word', 'ph-out'];
+    const T = { cut: 0.05, word: 0.5, out: 1.65, end: 2.1 };
     const t0 = performance.now();
     let lastPhase = -1, running = true;
 
     function finish() {
       document.body.classList.remove('preloading');
       el.classList.add('done');
-      setTimeout(() => { if (el.parentNode) el.remove(); }, 1000);
+      setTimeout(() => { if (el.parentNode) el.remove(); }, 900);
     }
 
     function frame(now) {
       if (!running) return;
       const t = (now - t0) / 1000;
-      /* phase */
-      const ph = t >= T.pass ? 'ph-pass' : t >= T.fine ? 'ph-fine' : t >= T.build ? 'ph-build' : t >= T.frag ? 'ph-frag' : t >= T.cut ? 'ph-cut' : '';
+      const ph = t >= T.out ? 'ph-out' : t >= T.word ? 'ph-word' : t >= T.cut ? 'ph-cut' : '';
       if (ph !== lastPhase) {
         phases.forEach((p) => el.classList.remove(p));
         if (ph) el.classList.add(ph);
         lastPhase = ph;
-        if (ph === 'ph-build') {
-          segs.forEach((s) => { s.style.transition = 'transform 1.15s cubic-bezier(.16,1.1,.3,1), opacity .8s ease'; s.style.transform = s._final; s.style.opacity = '1'; });
-        }
       }
       if (t >= T.end) { finish(); running = false; return; }
       requestAnimationFrame(frame);
@@ -372,6 +319,33 @@
   /* ============================================================
      REVEALS  — IntersectionObserver + scroll fallback
      ============================================================ */
+  /* text-scramble decode: cycles random glyphs before settling on the
+     real word — reuses the .title-word spans wrapped further below,
+     so it's applied lazily via scrambleSectionHead() once they exist. */
+  const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&*+=-/\\';
+  function scrambleWord(el) {
+    const final = el.textContent;
+    const len = final.length;
+    let frame = 0;
+    const totalFrames = 10 + len; // longer words settle a touch later
+    const iv = setInterval(() => {
+      frame++;
+      const revealCount = Math.floor((frame / totalFrames) * len);
+      let out = '';
+      for (let c = 0; c < len; c++) {
+        if (c < revealCount) out += final[c];
+        else out += SCRAMBLE_CHARS[(Math.random() * SCRAMBLE_CHARS.length) | 0];
+      }
+      el.textContent = out;
+      if (frame >= totalFrames) { el.textContent = final; clearInterval(iv); }
+    }, 28);
+  }
+  function scrambleSectionHead(headEl) {
+    if (reduced) return;
+    const words = $$('.title-word', headEl);
+    words.forEach((w, i) => setTimeout(() => scrambleWord(w), i * 70 + 80));
+  }
+
   const revealEls = $$('[data-reveal]');
   const revealObserver = ('IntersectionObserver' in window)
     ? new IntersectionObserver((entries) => {
@@ -380,6 +354,7 @@
             const i = Array.prototype.indexOf.call(en.target.parentNode.children, en.target);
             en.target.style.transitionDelay = (clamp(i, 0, 6) * 90) + 'ms';
             en.target.classList.add('in');
+            if (en.target.classList.contains('section-head')) scrambleSectionHead(en.target);
             revealObserver.unobserve(en.target);
           }
         });
@@ -400,6 +375,23 @@
   }
   window.addEventListener('scroll', revealFallback, { passive: true });
   window.addEventListener('load', revealFallback);
+
+  /* ============================================================
+     CINEMATIC DEPTH-OF-FIELD  — sections soften as they leave the
+     viewport and settle into full focus as they center, via the
+     --reveal custom property consumed in CSS (scale + blur).
+     ============================================================ */
+  if ('IntersectionObserver' in window && !reduced) {
+    const dofEls = $$('#scroll > section');
+    const steps = Array.from({ length: 21 }, (_, i) => i / 20);
+    const dofObserver = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        const eased = clamp(en.intersectionRatio * 1.15, 0, 1);
+        en.target.style.setProperty('--reveal', eased.toFixed(3));
+      });
+    }, { threshold: steps });
+    dofEls.forEach((el) => { el.style.setProperty('--reveal', 1); dofObserver.observe(el); });
+  }
 
   /* ============================================================
      HEADING REVEAL  (clean, reliable word-by-word stagger)
@@ -437,21 +429,57 @@
   /* ============================================================
      MAGNETIC ELEMENTS
      ============================================================ */
-  $$('.btn, .to-top, .orbit-detail .close, .nav-burger').forEach((el) => {
-    const strength = 0.32;
-    el.addEventListener('mousemove', (e) => {
-      if (!finePointer || reduced) return;
-      const r = el.getBoundingClientRect();
-      const dx = (e.clientX - (r.left + r.width / 2)) * strength;
-      const dy = (e.clientY - (r.top + r.height / 2)) * strength;
-      el.style.transform = `translate3d(${dx}px,${dy}px,0)`;
+  function magnetize(selector, strength) {
+    $$(selector).forEach((el) => {
+      el.addEventListener('mousemove', (e) => {
+        if (!finePointer || reduced) return;
+        const r = el.getBoundingClientRect();
+        const dx = (e.clientX - (r.left + r.width / 2)) * strength;
+        const dy = (e.clientY - (r.top + r.height / 2)) * strength;
+        el.style.transform = `translate3d(${dx}px,${dy}px,0)`;
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.transition = 'transform .6s cubic-bezier(.34,1.56,.64,1)';
+        el.style.transform = 'translate3d(0,0,0)';
+        setTimeout(() => { el.style.transition = ''; }, 600);
+      });
     });
-    el.addEventListener('mouseleave', () => {
-      el.style.transition = 'transform .6s cubic-bezier(.34,1.56,.64,1)';
-      el.style.transform = 'translate3d(0,0,0)';
-      setTimeout(() => { el.style.transition = ''; }, 600);
-    });
-  });
+  }
+  magnetize('.btn, .to-top, .orbit-detail .close, .nav-burger', 0.32);
+  magnetize('.nav-links a, .orbit-visit, .sitemap a', 0.22);
+
+  /* ============================================================
+     HERO GRADIENT MESH — cursor-reactive, brand-tinted blobs.
+     Each blob lags the pointer at a different rate so the mesh
+     reads as fluid depth rather than a single following light.
+     ============================================================ */
+  (function heroMesh() {
+    const heroEl = $('#top');
+    const blobs = $$('.hero-mesh-blob');
+    if (!heroEl || !blobs.length || reduced) return;
+    let hmx = window.innerWidth / 2, hmy = window.innerHeight / 2;
+    let px = [hmx, hmx, hmx], py = [hmy, hmy, hmy];
+    const lag = [0.05, 0.08, 0.12];
+    const swing = [1, -0.6, 0.8];
+    let active = finePointer;
+    if (finePointer) {
+      document.addEventListener('mousemove', (e) => { hmx = e.clientX; hmy = e.clientY; }, { passive: true });
+    }
+    (function loop() {
+      const r = heroEl.getBoundingClientRect();
+      const inView = r.bottom > 0 && r.top < window.innerHeight;
+      if (inView && active) {
+        blobs.forEach((b, i) => {
+          px[i] = lerp(px[i], hmx, lag[i]);
+          py[i] = lerp(py[i], hmy, lag[i]);
+          const ox = (px[i] - window.innerWidth / 2) * 0.35 * swing[i];
+          const oy = (py[i] - r.top - r.height / 2) * 0.35 * swing[i];
+          b.style.transform = `translate3d(calc(-50% + ${ox.toFixed(1)}px),calc(-50% + ${oy.toFixed(1)}px),0)`;
+        });
+      }
+      requestAnimationFrame(loop);
+    })();
+  })();
 
   /* ============================================================
      RIPPLE  (tactile tap feedback on glass buttons)
@@ -531,7 +559,7 @@
      PROJECT DATA
      ============================================================ */
   const MKS = ['mk1','mk2','mk3','mk4','mk5','mk6'];
-  const GH = 'https://kartik111111111111111.github.io';
+  const GH = 'https://sitemango.github.io';
   const PROJECTS = [
     { name:'Aurelius', category:'Luxury Watches', year:'2026', url: GH + '/aurelius/',
       desc:'A quiet exhibition of sapphire, steel, leather, and patience — a private presentation experience for a Swiss watch house, with a material study and an heirloom configurator.',
@@ -545,7 +573,7 @@
       desc:'A practice of patience — architecture and interiors for a life lived slowly. Photography, whitespace, and light moving the way the client had not yet imagined.',
       highlights:['Room stories','Material palette','Light studies','Commission'],
       tags:['Architecture','Editorial','Light'] },
-    { name:'Ember Coffee', category:'Café & Roastery', year:'2025', url: GH + '/coffee/',
+    { name:'Ember Coffee', category:'Café & Roastery', year:'2025', url: GH + '/embercoffee/',
       desc:'Wood-fired since 2019 — a small-batch roastery told through first-crack rituals, traceable beans, and a twelve-seat tasting counter.',
       highlights:['Roastery story','Signature drinks','Traceable collection','Reservations'],
       tags:['Café','Storytelling','Roastery'] },
@@ -599,10 +627,12 @@
       </div>`;
     const card = $('.orbit-card', el);
     const browser = $('.browser', el);
+    const miniWord = $('.mini-word', el);
+    const miniTop = $('.mini-top', el);
     el.addEventListener('mouseenter', () => { if (finePointer) hint.textContent = 'CLICK TO FOCUS'; });
     el.addEventListener('mouseleave', () => { if (finePointer) hint.textContent = 'DRAG TO STEER · SCROLL TO SPEED'; });
     track.appendChild(el);
-    return { p, el, card, browser, i, base: i * STEP, lastBlur: -1 };
+    return { p, el, card, browser, miniWord, miniTop, i, base: i * STEP, lastBlur: -1 };
   });
 
   function resizeOrbit() {
@@ -702,14 +732,27 @@
       const d = Math.hypot(sx - orbit.mx, sy - orbit.my);
       if (d < thresh) {
         const k = (1 - d / thresh);
+        const ddx = sx - orbit.mx, ddy = sy - orbit.my;
         it.el.classList.add('bent');
         it.browser.style.transition = 'transform .3s cubic-bezier(.34,1.56,.64,1)';
-        it.browser.style.transform = `rotateY(${(sx - orbit.mx) * k * 0.03}deg) rotateX(${-(sy - orbit.my) * k * 0.03}deg) scale(1.02)`;
+        it.browser.style.transform = `rotateY(${ddx * k * 0.03}deg) rotateX(${-ddy * k * 0.03}deg) scale(1.02)`;
+        // inner layers parallax at a different depth than the frame,
+        // giving the mock preview a tactile, layered feel.
+        if (it.miniWord) {
+          it.miniWord.style.transition = 'transform .3s cubic-bezier(.34,1.56,.64,1)';
+          it.miniWord.style.transform = `translate3d(${-ddx * k * 0.05}px,${-ddy * k * 0.05}px,18px)`;
+        }
+        if (it.miniTop) {
+          it.miniTop.style.transition = 'transform .3s cubic-bezier(.34,1.56,.64,1)';
+          it.miniTop.style.transform = `translate3d(${-ddx * k * 0.03}px,${-ddy * k * 0.03}px,10px)`;
+        }
       } else {
         if (it.el.classList.contains('bent')) {
           it.el.classList.remove('bent');
           it.browser.style.transition = 'transform .5s cubic-bezier(.16,1,.3,1)';
           it.browser.style.transform = '';
+          if (it.miniWord) { it.miniWord.style.transition = 'transform .5s cubic-bezier(.16,1,.3,1)'; it.miniWord.style.transform = ''; }
+          if (it.miniTop) { it.miniTop.style.transition = 'transform .5s cubic-bezier(.16,1,.3,1)'; it.miniTop.style.transform = ''; }
         }
       }
     });

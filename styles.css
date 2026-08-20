@@ -127,44 +127,54 @@ em{font-style:normal}
 
 /* ============================================================
    CINEMATIC LOADER — 5s luxury title sequence.
-   Strictly B&W. Phases: idle → cut → fragments → build → fine → pass.
-   Driven by .ph-* classes + a JS timeline. The logo is constructed
-   from geometric line fragments, never faded in.
+   Strictly B&W. Quiet, filmic, ~2s: a hairline draws itself in,
+   the wordmark resolves from a soft blur with a slight settle,
+   a thin rule breathes beneath it, then everything dissolves.
+   No scatter, no gimmicks — restraint reads as premium.
    ============================================================ */
 body.preloading{overflow:hidden}
 .preloader{
   position:fixed;inset:0;z-index:12000;background:#000;overflow:hidden;cursor:none;
-  opacity:1;transition:opacity 1s ease, visibility 0s linear 1s;will-change:opacity;
+  opacity:1;transition:opacity .9s cubic-bezier(.4,0,.2,1), visibility 0s linear .9s;will-change:opacity;
+  display:flex;align-items:center;justify-content:center;
 }
 body.cursor-on .preloader{cursor:none}
 .preloader.done{opacity:0;visibility:hidden;pointer-events:none}
+.preloader.done .ld-scene{transform:scale(1.015)}
 
-.ld-scene{position:absolute;inset:0;will-change:transform}
+.ld-scene{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;
+  transition:transform .9s cubic-bezier(.4,0,.2,1);will-change:transform}
 
-/* STEP 2 — the line cuts the darkness, camera nudges in */
-.ld-line{position:absolute;top:50%;left:0;width:100vw;height:1px;background:#fff;
-  transform:scaleX(0);transform-origin:left;opacity:0;will-change:transform}
-.preloader.ph-cut .ld-line{opacity:1;animation:ldCut 1s cubic-bezier(.16,.82,.26,1) forwards}
-@keyframes ldCut{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-.preloader.ph-cut .ld-scene{animation:ldZoom 1s cubic-bezier(.3,.08,.2,1) forwards}
-@keyframes ldZoom{from{transform:scale(1)}to{transform:scale(1.05)}}
+/* a hairline draws itself across, center-out */
+.ld-line{position:relative;display:block;width:56px;height:1px;background:rgba(255,255,255,.5);
+  transform:scaleX(0);opacity:0;will-change:transform,opacity}
+.preloader.ph-cut .ld-line{animation:ldLine 1.1s cubic-bezier(.16,.82,.26,1) forwards}
+@keyframes ldLine{
+  0%{transform:scaleX(0);opacity:0}
+  35%{opacity:1}
+  100%{transform:scaleX(1);opacity:.5}
+}
 
-/* STEP 3+ — the built wordmark lives in the center */
-.ld-build{position:absolute;left:50%;top:50%;width:min(84vw,900px);height:200px;
-  transform:translate(-50%,-50%) scale(.94);opacity:0;will-change:transform,opacity}
-.preloader.ph-frag .ld-build{opacity:1;transform:translate(-50%,-50%) scale(1);
-  transition:opacity .25s ease, transform .7s cubic-bezier(.2,1.1,.3,1)}
-.preloader.ph-build .ld-build{transform:translate(-50%,-50%) scale(1) rotate(-1.2deg);
-  transition:transform 1.2s cubic-bezier(.16,1,.3,1)}
-.preloader.ph-fine .ld-build{transform:translate(-50%,-50%) scale(1.012) rotate(0);
-  transition:transform 1.4s cubic-bezier(.16,1,.3,1)}
-/* STEP 6 — camera passes straight through the wordmark */
-.preloader.ph-pass .ld-build{transform:translate(-50%,-50%) scale(9);
-  transition:transform 1.1s cubic-bezier(.3,.05,.2,1), opacity .7s ease;opacity:0}
-.preloader.ph-pass{opacity:0;transition:opacity 1s ease}
+/* the wordmark resolves out of a soft blur, no motion overshoot */
+.ld-word{margin:0;font-family:var(--font-display,inherit);font-weight:500;
+  font-size:clamp(22px,4vw,34px);letter-spacing:.42em;color:#fff;
+  text-transform:uppercase;opacity:0;filter:blur(10px);
+  transform:translateY(6px) scale(1.015);
+  transition:opacity 1.1s cubic-bezier(.2,.7,.2,1), filter 1.1s cubic-bezier(.2,.7,.2,1), transform 1.2s cubic-bezier(.2,.7,.2,1);
+  will-change:opacity,filter,transform}
+.ld-word em{font-style:normal;opacity:.55}
+.preloader.ph-word .ld-word{opacity:1;filter:blur(0);transform:translateY(0) scale(1)}
 
-/* each geometric fragment is a 1px white segment */
-.ld-seg{position:absolute;height:1px;background:#fff;will-change:transform,opacity}
+/* a thin rule breathes beneath the mark while it holds */
+.ld-rule{display:block;width:0;height:1px;background:rgba(255,255,255,.28);
+  transition:width 1.3s cubic-bezier(.16,1,.3,1) .15s}
+.preloader.ph-word .ld-rule{width:120px}
+.preloader.ph-out .ld-rule{width:36px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* soft release — everything dissolves together, no zoom-through */
+.preloader.ph-out .ld-line,
+.preloader.ph-out .ld-word{transition:opacity .8s cubic-bezier(.4,0,.2,1), filter .8s cubic-bezier(.4,0,.2,1);
+  opacity:0;filter:blur(6px)}
 
 ::selection{background:rgba(245,245,242,.9);color:#090909}
 
@@ -477,12 +487,49 @@ body.menu-open .nav{pointer-events:none}
 /* ============================================================
    SHARED
    ============================================================ */
-html{scroll-snap-type:y mandatory}
+html{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 section{position:relative;padding:clamp(80px,14vh,150px) clamp(20px,6vw,80px);z-index:1;
   scroll-snap-align:start;scroll-margin-top:0;min-height:100vh}
 #top{scroll-margin-top:0}
+
+/* ============================================================
+   CINEMATIC DEPTH-OF-FIELD ON SCROLL
+   Sections settle into full focus as they center in the viewport
+   and soften — a touch of scale + blur — as they leave it.
+   Driven by --reveal (0..1) set from an IntersectionObserver.
+   ============================================================ */
+#scroll > section{
+  transform:scale(calc(0.965 + var(--reveal,1) * 0.035));
+  filter:blur(calc((1 - var(--reveal,1)) * 5px));
+  transition:transform .5s cubic-bezier(.2,.7,.2,1), filter .5s cubic-bezier(.2,.7,.2,1);
+  will-change:transform,filter;
+}
+@media (prefers-reduced-motion: reduce){
+  #scroll > section{transform:none !important;filter:none !important;transition:none !important}
+}
 section:not(#top){display:flex;flex-direction:column;justify-content:center}
-.hero{padding:0;min-height:100vh;display:flex;align-items:center}
+.hero{padding:0;min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden}
+
+/* ============================================================
+   HERO GRADIENT MESH — cursor-reactive, brand-tinted (mango).
+   Three blurred blobs lag the pointer at different rates so the
+   mesh feels fluid rather than a single spotlight following 1:1.
+   ============================================================ */
+.hero-mesh{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;
+  mix-blend-mode:screen;opacity:.55}
+:root[data-theme="light"] .hero-mesh{opacity:.10;mix-blend-mode:multiply}
+:root[data-theme="light"] .hero-mesh-blob--a{background:radial-gradient(circle, rgba(255,138,61,.4), transparent 68%)}
+:root[data-theme="light"] .hero-mesh-blob--b{background:radial-gradient(circle, rgba(255,60,90,.22), transparent 70%)}
+:root[data-theme="light"] .hero-mesh-blob--c{background:radial-gradient(circle, rgba(255,200,90,.3), transparent 72%)}
+.hero-mesh-blob{position:absolute;top:50%;left:50%;border-radius:50%;filter:blur(60px);
+  transform:translate3d(-50%,-50%,0);will-change:transform;transition:opacity .6s ease}
+.hero-mesh-blob--a{width:46vw;height:46vw;max-width:640px;max-height:640px;
+  background:radial-gradient(circle, rgba(255,138,61,.55), transparent 68%)}
+.hero-mesh-blob--b{width:34vw;height:34vw;max-width:480px;max-height:480px;
+  background:radial-gradient(circle, rgba(255,60,90,.32), transparent 70%)}
+.hero-mesh-blob--c{width:26vw;height:26vw;max-width:380px;max-height:380px;
+  background:radial-gradient(circle, rgba(255,200,90,.4), transparent 72%)}
+.hero-inner{position:relative;z-index:1}
 .footer{scroll-snap-align:start}
 
 /* ============================================================
@@ -684,7 +731,7 @@ section:not(#top){display:flex;flex-direction:column;justify-content:center}
 
 /* browser frame */
 .browser{
-  border-radius:14px;overflow:hidden;
+  border-radius:14px;overflow:hidden;transform-style:preserve-3d;
   background:linear-gradient(160deg,#141414,#0c0c0c);
   border:1px solid var(--border-strong);
   box-shadow:0 40px 90px -30px rgba(0,0,0,.9), 0 18px 40px -20px rgba(0,0,0,.7);
@@ -706,7 +753,9 @@ section:not(#top){display:flex;flex-direction:column;justify-content:center}
 .browser-dots i:first-child{background:#3a3a3a}
 .browser-url{flex:1;text-align:center;font-size:9px;letter-spacing:.12em;color:var(--text-3);
   background:var(--bg);border:1px solid var(--border);border-radius:100px;padding:3px 10px}
-.browser-body{height:clamp(150px,19vh,240px);position:relative;overflow:hidden;display:block}
+.browser-body{height:clamp(150px,19vh,240px);position:relative;overflow:hidden;display:block;transform-style:preserve-3d}
+.mini{transform-style:preserve-3d}
+.mini-word,.mini-top{transform-style:preserve-3d;will-change:transform}
 
 /* Mini mock page shared building blocks */
 .mini{position:absolute;inset:0;padding:16px 16px;display:flex;flex-direction:column}
